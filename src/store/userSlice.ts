@@ -27,6 +27,15 @@ export const updateUser = createAsyncThunk(
   }
 );
 
+export const updateUserAvatar = createAsyncThunk(
+  "user/updateUserAvatar",
+  async (file: File) => {
+    const avatarUrl = await api.uploadAvatar(file);
+    const response = await api.updateUser({ avatar: avatarUrl });
+    return response;
+  }
+);
+
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -61,6 +70,18 @@ const userSlice = createSlice({
       .addCase(updateUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to update user";
+      })
+      .addCase(updateUserAvatar.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUserAvatar.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+      })
+      .addCase(updateUserAvatar.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to update avatar";
       });
   },
 });

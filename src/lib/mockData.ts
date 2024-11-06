@@ -11,6 +11,7 @@ import {
 export const mockUser: User = {
   id: "1",
   name: "Charlene Reed",
+  username: "charlenereed",
   email: "charlenereed@gmail.com",
   avatar: "/avatars/profile.jpg",
   dateOfBirth: "25 January 1990",

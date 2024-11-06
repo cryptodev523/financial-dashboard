@@ -1,7 +1,9 @@
 import { useLocation } from "react-router-dom";
-import Avatar from "../../assets/avatar1.png";
+import defaultAvatar from "../../assets/avatar1.png";
+import { useAppSelector } from "../../store/hooks";
 
 export default function Header() {
+  const { data: user } = useAppSelector((state) => state.user);
   const location = useLocation();
 
   const getTitle = () => {
@@ -29,6 +31,8 @@ export default function Header() {
     }
   };
 
+  const avatarSrc = user?.avatar || defaultAvatar;
+
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="px-6 py-3">
@@ -42,7 +46,7 @@ export default function Header() {
             <button className="flex lg:hidden items-center ml-auto">
               <img
                 className="h-8 w-8 rounded-full object-cover"
-                src={Avatar}
+                src={avatarSrc}
                 alt="Profile"
               />
             </button>
@@ -108,7 +112,7 @@ export default function Header() {
               <button className="flex items-center">
                 <img
                   className="h-8 w-8 rounded-full object-cover"
-                  src={Avatar}
+                  src={avatarSrc}
                   alt="Profile"
                 />
               </button>

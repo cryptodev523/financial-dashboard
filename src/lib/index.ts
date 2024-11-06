@@ -1,5 +1,4 @@
 import { User } from "../types";
-import { imageStorage } from "../utils/imageStorage";
 import {
   mockUser,
   mockCards,
@@ -10,6 +9,8 @@ import {
   mockContacts,
 } from "./mockData";
 
+const API_URL = "http://localhost:3001/api";
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const api = {
@@ -18,12 +19,32 @@ export const api = {
     return mockUser;
   },
 
+  uploadAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await fetch(`${API_URL}/avatar/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to upload avatar");
+    }
+
+    const data = await response.json();
+    return data.url;
+  },
+
   updateUser: async (userData: Partial<User>) => {
     await delay(800);
-    if (userData.id && userData.profileImage) {
-      imageStorage.saveImage(userData.id, userData.profileImage);
-    }
-    return { ...mockUser, ...userData };
+    const currentUser = await api.getUser();
+
+    return {
+      ...currentUser,
+      ...userData,
+      avatar: userData.avatar || currentUser.avatar,
+    };
   },
 
   getCards: async () => {

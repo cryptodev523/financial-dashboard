@@ -1,8 +1,6 @@
-import { FormEvent, useState } from "react";
-import { Icon } from "@iconify/react";
+import { FormEvent, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { updateUser } from "../store/userSlice";
-import { imageStorage } from "../utils/imageStorage";
+import { fetchUser, updateUser, updateUserAvatar } from "../store/userSlice";
 import ImageUpload from "../utils/imageUpload";
 
 interface FormData {
@@ -42,8 +40,29 @@ const Tab = ({ label, isActive, onClick }: TabProps) => (
 export default function Settings() {
   const dispatch = useAppDispatch();
   const { data: user, loading } = useAppSelector((state) => state.user);
+
   const [activeTab, setActiveTab] = useState("Edit Profile");
   const tabs = ["Edit Profile", "Preferences", "Security"];
+
+  useEffect(() => {
+    dispatch(fetchUser());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        username: user.username || "",
+        email: user.email || "",
+        password: "", // Keep password empty
+        dateOfBirth: user.dateOfBirth || "",
+        address: user.address || "",
+        city: user.city || "",
+        postalCode: user.postalCode || "",
+        country: user.country || "",
+      });
+    }
+  }, [user]);
 
   const [formData, setFormData] = useState<FormData>({
     name: user?.name || "",
@@ -59,29 +78,11 @@ export default function Settings() {
 
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const savedImage = user?.id ? imageStorage.getImage(user.id) : null;
-  const [imagePreview, setImagePreview] = useState<string>(
-    savedImage || user?.avatar || "/avatars/profile.jpg"
-  );
-
-  const handleImageChange = async (base64Image: string) => {
+  const handleImageChange = async (file: File) => {
     try {
-      // Save to localStorage
-      if (user?.id) {
-        imageStorage.saveImage(user.id, base64Image);
-      }
-
-      // Update preview
-      setImagePreview(base64Image);
-
-      // Update form data
-      setFormData((prev) => ({
-        ...prev,
-        profileImage: base64Image,
-      }));
+      await dispatch(updateUserAvatar(file)).unwrap();
     } catch (error) {
-      console.error("Failed to save image:", error);
-      alert("Failed to save image");
+      console.error("Failed to update avatar:", error);
     }
   };
 
@@ -149,10 +150,14 @@ export default function Settings() {
     }
 
     try {
-      await dispatch(updateUser(formData)).unwrap();
-      // You could add a success notification here
+      // Include the current avatar URL in the update
+      await dispatch(
+        updateUser({
+          ...formData,
+          avatar: user?.avatar || "",
+        })
+      ).unwrap();
     } catch (error) {
-      // You could add an error notification here
       console.error("Failed to update profile:", error);
     }
   };
@@ -174,7 +179,7 @@ export default function Settings() {
         <div className="flex flex-col md:grid md:grid-cols-12 gap-6 md:gap-8">
           <div className="w-full md:col-span-3 flex justify-center md:block">
             <ImageUpload
-              currentImage={imagePreview}
+              currentImage={user?.avatar}
               onImageChange={handleImageChange}
             />
           </div>

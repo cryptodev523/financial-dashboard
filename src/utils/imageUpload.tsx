@@ -1,10 +1,9 @@
 import { ChangeEvent, useRef } from "react";
 import { Icon } from "@iconify/react";
-import { imageStorage } from "../utils/imageStorage";
 
 interface ImageUploadProps {
   currentImage: string;
-  onImageChange: (base64: string) => void;
+  onImageChange: (file: File) => Promise<void>;
 }
 
 export default function ImageUpload({
@@ -33,9 +32,7 @@ export default function ImageUpload({
       }
 
       try {
-        // Convert to base64
-        const base64Image = await imageStorage.fileToBase64(file);
-        onImageChange(base64Image);
+        await onImageChange(file);
       } catch (error) {
         console.error("Error processing image:", error);
         alert("Failed to process image");
@@ -58,7 +55,7 @@ export default function ImageUpload({
         className="hidden"
       />
       <button
-        type="button" // Prevent form submission
+        type="button"
         onClick={handleClick}
         className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
       >
