@@ -326,7 +326,7 @@ export default function Sidebar() {
   const location = useLocation();
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200">
+    <aside className="w-64 h-full bg-white border-r border-gray-200">
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center">
           <Icon icon="mingcute:task-fill" width={35} height={35} />
