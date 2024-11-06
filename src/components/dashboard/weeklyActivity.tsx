@@ -9,7 +9,10 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import DashboardCard from "./DashboardCard";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchStatistics } from "../../store/statisticsSlice";
+import DashboardCard from "./dashboardCard";
 
 ChartJS.register(
   CategoryScale,
@@ -22,18 +25,45 @@ ChartJS.register(
 );
 
 export default function WeeklyActivity() {
+  const dispatch = useAppDispatch();
+  const { weeklyActivity, loading, error } = useAppSelector(
+    (state) => state.statistics
+  );
+
+  useEffect(() => {
+    dispatch(fetchStatistics());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <DashboardCard title="Weekly Activity">
+        <div className="flex items-center justify-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardCard title="Weekly Activity">
+        <div className="text-red-500">Error: {error}</div>
+      </DashboardCard>
+    );
+  }
+
   const data = {
-    labels: ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
+    labels: weeklyActivity.map((item) => item.day),
     datasets: [
       {
         label: "Deposit",
-        data: [200, 100, 150, 350, 250, 280, 300],
+        data: weeklyActivity.map((item) => item.deposit),
         borderColor: "rgb(59, 130, 246)",
         backgroundColor: "rgba(59, 130, 246, 0.5)",
       },
       {
         label: "Withdraw",
-        data: [450, 300, 350, 450, 150, 400, 400],
+        data: weeklyActivity.map((item) => item.withdraw),
         borderColor: "rgb(0, 0, 0)",
         backgroundColor: "rgba(0, 0, 0, 0.5)",
       },

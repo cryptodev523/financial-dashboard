@@ -1,50 +1,85 @@
-# React + TypeScript + Vite
+# Financial Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern financial dashboard application built with React, TypeScript, and Vite, featuring responsive design and real-time data visualization.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Dashboard overview with financial metrics
+- Credit card management
+- Transaction history
+- Expense statistics with charts
+- Quick transfer functionality
+- User profile management
+- Responsive design for all devices
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- React 18.3
+- TypeScript
+- Vite
+- Redux Toolkit for state management
+- TailwindCSS for styling
+- Chart.js for data visualization
+- Express.js backend for file uploads
 
-- Configure the top-level `parserOptions` property like this:
+## Prerequisites
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- Node.js (v18 or higher)
+- npm (v9 or higher)
+
+## Setup Instructions
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/cryptodev523/financial-dashboard.git
+cd financial-dashboard
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+2. Install dependencies:
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+npm install
 ```
+
+3. Create required directories:
+
+```bash
+mkdir -p public/upload/avatars
+```
+
+4. Start the development server:
+
+```bash
+npm run dev
+```
+
+This will start both the Vite development server and the Express backend server at the same time.
+
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3000
+
+
+## Development Assumptions
+
+1. **Authentication**
+   - Authentication is not implemented in this version
+   - User data is mocked for demonstration purposes
+
+2. **API Integration**
+   - Mock data is used for most API endpoints
+   - Only file upload functionality uses real API endpoints
+
+3. **Data Persistence**
+   - Data is not persisted between sessions
+   - File uploads are stored in the local filesystem
+
+4. **Browser Support**
+   - Modern browsers (Chrome, Firefox, Safari, Edge)
+   - Minimum viewport width of 320px
+
+## Environment Variables
+
+No environment variables are required for basic setup. The application uses default ports:
+- Frontend: 5173
+- Backend: 3001

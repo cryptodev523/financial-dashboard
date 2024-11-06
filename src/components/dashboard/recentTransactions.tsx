@@ -1,41 +1,39 @@
-import DashboardCard from "./DashboardCard";
-
-interface Transaction {
-  id: string;
-  type: "deposit" | "payment";
-  name: string;
-  date: string;
-  amount: number;
-  icon: string;
-}
+import { useEffect } from "react";
+import DashboardCard from "./dashboardCard";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchTransactions } from "../../store/transactionsSlice";
 
 export default function RecentTransactions() {
-  const transactions: Transaction[] = [
-    {
-      id: "1",
-      type: "deposit",
-      name: "Deposit from my Card",
-      date: "28 January 2021",
-      amount: -850,
-      icon: "💳",
-    },
-    {
-      id: "2",
-      type: "deposit",
-      name: "Deposit Paypal",
-      date: "25 January 2021",
-      amount: 2500,
-      icon: "🅿️",
-    },
-    {
-      id: "3",
-      type: "payment",
-      name: "Jemi Wilson",
-      date: "21 January 2021",
-      amount: 5400,
-      icon: "👤",
-    },
-  ];
+  const dispatch = useAppDispatch();
+  const {
+    items: transactions,
+    loading,
+    error,
+  } = useAppSelector((state) => state.transactions);
+
+  useEffect(() => {
+    dispatch(fetchTransactions());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <DashboardCard title="Recent Transaction">
+        <div className="flex items-center justify-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardCard title="Recent Transaction">
+        <div className="flex items-center justify-center h-48 text-red-500">
+          Error: {error}
+        </div>
+      </DashboardCard>
+    );
+  }
 
   return (
     <DashboardCard title="Recent Transaction">

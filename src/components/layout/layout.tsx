@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./header";
-import Sidebar from "./Sidebar";
+import Sidebar from "./sidebar";
 
 export default function Layout() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
