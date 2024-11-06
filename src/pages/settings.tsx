@@ -1,6 +1,25 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { Icon } from "@iconify/react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { updateUser } from "../store/userSlice";
+import { imageStorage } from "../utils/imageStorage";
+import ImageUpload from "../utils/imageUpload";
 
+interface FormData {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  dateOfBirth: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
+}
 interface TabProps {
   label: string;
   isActive: boolean;
@@ -21,8 +40,122 @@ const Tab = ({ label, isActive, onClick }: TabProps) => (
 );
 
 export default function Settings() {
+  const dispatch = useAppDispatch();
+  const { data: user, loading } = useAppSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState("Edit Profile");
   const tabs = ["Edit Profile", "Preferences", "Security"];
+
+  const [formData, setFormData] = useState<FormData>({
+    name: user?.name || "",
+    username: user?.name || "",
+    email: user?.email || "",
+    password: "",
+    dateOfBirth: user?.dateOfBirth || "",
+    address: user?.address || "",
+    city: user?.city || "",
+    postalCode: user?.postalCode || "",
+    country: user?.country || "",
+  });
+
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const savedImage = user?.id ? imageStorage.getImage(user.id) : null;
+  const [imagePreview, setImagePreview] = useState<string>(
+    savedImage || user?.avatar || "/avatars/profile.jpg"
+  );
+
+  const handleImageChange = async (base64Image: string) => {
+    try {
+      // Save to localStorage
+      if (user?.id) {
+        imageStorage.saveImage(user.id, base64Image);
+      }
+
+      // Update preview
+      setImagePreview(base64Image);
+
+      // Update form data
+      setFormData((prev) => ({
+        ...prev,
+        profileImage: base64Image,
+      }));
+    } catch (error) {
+      console.error("Failed to save image:", error);
+      alert("Failed to save image");
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    } else if (formData.name.length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    // Password validation (only if changed)
+    if (formData.password) {
+      if (formData.password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+      } else if (!/(?=.*[A-Z])/.test(formData.password)) {
+        newErrors.password =
+          "Password must contain at least one uppercase letter";
+      } else if (!/(?=.*[0-9])/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one number";
+      }
+    }
+
+    // Postal code validation
+    const postalCodeRegex = /^\d{5}(-\d{4})?$/;
+    if (formData.postalCode && !postalCodeRegex.test(formData.postalCode)) {
+      newErrors.postalCode =
+        "Invalid postal code format (e.g., 12345 or 12345-6789)";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      await dispatch(updateUser(formData)).unwrap();
+      // You could add a success notification here
+    } catch (error) {
+      // You could add an error notification here
+      console.error("Failed to update profile:", error);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto bg-white rounded-lg p-4 md:p-6 shadow-sm">
@@ -40,19 +173,13 @@ export default function Settings() {
       {activeTab === "Edit Profile" && (
         <div className="flex flex-col md:grid md:grid-cols-12 gap-6 md:gap-8">
           <div className="w-full md:col-span-3 flex justify-center md:block">
-            <div className="relative w-32 h-32 md:w-40 md:h-40">
-              <img
-                src="/avatars/profile.jpg"
-                alt="Profile"
-                className="w-full h-full rounded-full object-cover"
-              />
-              <button className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                <Icon icon="heroicons:pencil-square" className="w-5 h-5" />
-              </button>
-            </div>
+            <ImageUpload
+              currentImage={imagePreview}
+              onImageChange={handleImageChange}
+            />
           </div>
 
-          <form className="w-full md:col-span-9">
+          <form onSubmit={handleSubmit} className="w-full md:col-span-9">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -60,9 +187,14 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="Charlene Reed"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+                )}
               </div>
 
               <div>
@@ -71,7 +203,9 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="Charlene Reed"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
               </div>
@@ -82,9 +216,14 @@ export default function Settings() {
                 </label>
                 <input
                   type="email"
-                  defaultValue="charlenereed@gmail.com"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -93,9 +232,14 @@ export default function Settings() {
                 </label>
                 <input
                   type="password"
-                  defaultValue="**********"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                )}
               </div>
 
               <div>
@@ -104,7 +248,9 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="25 January 1990"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
               </div>
@@ -115,7 +261,9 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="San Jose, California, USA"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
               </div>
@@ -126,7 +274,9 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="San Jose, California, USA"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
               </div>
@@ -137,7 +287,9 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="San Jose"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
               </div>
@@ -148,9 +300,16 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="45962"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
+                {errors.postalCode && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.postalCode}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -159,7 +318,9 @@ export default function Settings() {
                 </label>
                 <input
                   type="text"
-                  defaultValue="USA"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                 />
               </div>
