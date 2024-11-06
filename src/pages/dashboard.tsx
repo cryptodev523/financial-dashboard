@@ -7,7 +7,7 @@ import BalanceHistory from "../components/dashboard/balanceHistory";
 
 export default function Dashboard() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-2 lg:p-6 space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MyCards />
         <RecentTransactions />
